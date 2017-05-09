@@ -29,6 +29,7 @@ instance_groups:
       basic_auth_username: ((concourse_basic_auth_username))
       basic_auth_password: ((concourse_basic_auth_password))
       postgresql_database: ((concourse_atc_db_name))
+      tls_bind_port: 443
   - name: tsa
     release: concourse
     properties: {}
