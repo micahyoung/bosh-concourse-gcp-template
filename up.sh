@@ -127,7 +127,7 @@ if ! bosh stemcells -e $CONCOURSE_BOSH_ENV | grep -q bosh-google-kvm-ubuntu-trus
   bosh upload-stemcell -e $CONCOURSE_BOSH_ENV https://s3.amazonaws.com/bosh-core-stemcells/google/bosh-stemcell-3363.20-google-kvm-ubuntu-trusty-go_agent.tgz
 fi
 
-CONCOURSE_LBS_DOMAIN=$($bbl_cmd lbs | sed 's/.*: \(*\)/\1/')  # Format: Concourse LB: 1.2.3.4
+CONCOURSE_LBS_DOMAIN=$($bbl_cmd lbs | sed 's/.*: \(.*\)/\1/')  # Format: Concourse LB: 1.2.3.4
 if ! [ -f state/concourse-creds.yml ]; then
   # from https://github.com/cloudfoundry/bosh-bootloader/blob/master/docs/concourse_aws.md
   cat > state/concourse-creds.yml <<EOF
@@ -163,7 +163,7 @@ fi
 # if we can set the target with default password, update the password
 if fly login \
   --target $CONCOURSE_TARGET \
-  --concourse-url "http://$CONCOURSE_LBS_DOMAIN" \
+  --concourse-url "https://$CONCOURSE_LBS_DOMAIN" \
   --username admin \
   --password password 2>/dev/null; then
   echo y | fly set-team \
