@@ -86,16 +86,8 @@ if ! [ -f state/bosh.pem ]; then
 fi
 
 if ! [ -f state/$DOMAIN.key ]; then
-  openssl req \
-    -newkey rsa:2048 \
-    -nodes \
-    -keyout state/$DOMAIN.key \
-    -x509 \
-    -days 365 \
-    -subj "/C=US/ST=NY/O=Pivotal/localityName=NYC/commonName=$DOMAIN/organizationalUnitName=Foo/emailAddress=bar" \
-    -multivalue-rdn \
-    -out state/$DOMAIN.crt \
-  ;
+  echo generate cert and key manually using bosh ssh and certbot on the web instance
+  exit 1
 fi
 
 if ! $bbl_cmd lbs; then
@@ -127,12 +119,11 @@ if ! bosh stemcells -e $CONCOURSE_BOSH_ENV | grep -q bosh-google-kvm-ubuntu-trus
   bosh upload-stemcell -e $CONCOURSE_BOSH_ENV https://s3.amazonaws.com/bosh-core-stemcells/google/bosh-stemcell-3363.20-google-kvm-ubuntu-trusty-go_agent.tgz
 fi
 
-CONCOURSE_LBS_DOMAIN=$($bbl_cmd lbs | sed 's/.*: \(.*\)/\1/')  # Format: Concourse LB: 1.2.3.4
 if ! [ -f state/concourse-creds.yml ]; then
   # from https://github.com/cloudfoundry/bosh-bootloader/blob/master/docs/concourse_aws.md
   cat > state/concourse-creds.yml <<EOF
 concourse_deployment_name: $CONCOURSE_DEPLOYMENT_NAME
-concourse_external_url: https://$CONCOURSE_LBS_DOMAIN
+concourse_external_url: https://$DOMAIN
 concourse_basic_auth_username: $CONCOURSE_USERNAME
 concourse_basic_auth_password: $CONCOURSE_PASSWORD
 concourse_atc_db_name: $CONCOURSE_DB_NAME
@@ -158,14 +149,14 @@ if ! bosh deployments -e $CONCOURSE_BOSH_ENV | grep -q $CONCOURSE_DEPLOYMENT_NAM
 fi
 
 if ! [ -f bin/fly ]; then
-  curl -L "https://$CONCOURSE_LBS_DOMAIN/api/v1/cli?arch=amd64&platform=darwin" > bin/fly
+  curl -L "https://$DOMAIN/api/v1/cli?arch=amd64&platform=darwin" > bin/fly
   chmod +x bin/fly
 fi
 
 # if we can set the target with default password, update the password
 if fly login \
   --target $CONCOURSE_TARGET \
-  --concourse-url "https://$CONCOURSE_LBS_DOMAIN" \
+  --concourse-url "https://$DOMAIN" \
   --username admin \
   --password password 2>/dev/null; then
   echo y | fly set-team \
