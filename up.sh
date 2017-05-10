@@ -132,12 +132,14 @@ if ! [ -f state/concourse-creds.yml ]; then
   # from https://github.com/cloudfoundry/bosh-bootloader/blob/master/docs/concourse_aws.md
   cat > state/concourse-creds.yml <<EOF
 concourse_deployment_name: $CONCOURSE_DEPLOYMENT_NAME
-concourse_external_url: http://$CONCOURSE_LBS_DOMAIN
+concourse_external_url: https://$CONCOURSE_LBS_DOMAIN
 concourse_basic_auth_username: $CONCOURSE_USERNAME
 concourse_basic_auth_password: $CONCOURSE_PASSWORD
 concourse_atc_db_name: $CONCOURSE_DB_NAME
 concourse_atc_db_role: $CONCOURSE_DB_ROLE
 concourse_atc_db_password: $CONCOURSE_DB_PASSWORD
+concourse_tls_cert: !!binary $(base64 state/$DOMAIN.crt)
+concourse_tls_key: !!binary $(base64 state/$DOMAIN.key)
 concourse_vm_type: n1-standard-1
 concourse_worker_vm_extensions: 50GB_ephemeral_disk
 concourse_web_vm_extensions: lb
@@ -156,7 +158,7 @@ if ! bosh deployments -e $CONCOURSE_BOSH_ENV | grep -q $CONCOURSE_DEPLOYMENT_NAM
 fi
 
 if ! [ -f bin/fly ]; then
-  curl -L "http://$CONCOURSE_LBS_DOMAIN/api/v1/cli?arch=amd64&platform=darwin" > bin/fly
+  curl -L "https://$CONCOURSE_LBS_DOMAIN/api/v1/cli?arch=amd64&platform=darwin" > bin/fly
   chmod +x bin/fly
 fi
 
